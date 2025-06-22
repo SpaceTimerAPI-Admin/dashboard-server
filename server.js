@@ -1,77 +1,64 @@
 
 const express = require('express');
 const fetch = require('node-fetch');
-const cors = require('cors');
-
 const app = express();
 const PORT = process.env.PORT || 4000;
 
-app.use(cors());
+const PARK_IDS = {
+  "Magic Kingdom": 6,
+  "EPCOT": 5,
+  "Disney's Hollywood Studios": 7,
+  "Disney's Animal Kingdom": 4,
+  "Universal Studios Florida": 65,
+  "Universal's Islands of Adventure": 64,
+  "Universal's Epic Universe": 66
+};
 
-function parseTimeToTodayDate(timeStr) {
-  const [hourMin, ampm] = timeStr.split(' ');
-  let [hour, min] = hourMin.split(':').map(Number);
-  if (ampm === 'PM' && hour !== 12) hour += 12;
-  if (ampm === 'AM' && hour === 12) hour = 0;
-  const now = new Date();
-  return new Date(now.getFullYear(), now.getMonth(), now.getDate(), hour, min);
-}
+const STATIC_HOURS = {
+  "Magic Kingdom": "9:00 AM – 11:00 PM",
+  "EPCOT": "9:00 AM – 9:00 PM",
+  "Disney's Hollywood Studios": "8:30 AM – 9:00 PM",
+  "Disney's Animal Kingdom": "8:00 AM – 8:00 PM",
+  "Universal Studios Florida": "9:00 AM – 9:00 PM",
+  "Universal's Islands of Adventure": "9:00 AM – 9:00 PM",
+  "Universal's Epic Universe": "Coming 2025"
+};
 
 app.get('/api/waits', async (req, res) => {
-  try {
-    const now = new Date();
+  const parks = {};
 
-    const parkData = {
-      "Magic Kingdom": {
-        hours: "9:00 AM – 9:00 PM",
-        earlyEntry: "8:30 AM",
-        parkHopper: "2:00 PM",
-        attractions: [
-          { name: "Seven Dwarfs Mine Train", wait: 65, status: "open" },
-          { name: "Peter Pan's Flight", wait: 45, status: "closed" }
-        ]
-      },
-      "EPCOT": {
-        hours: "9:00 AM – 9:00 PM",
-        earlyEntry: "8:30 AM",
-        parkHopper: "2:00 PM",
-        attractions: [
-          { name: "Test Track", wait: 0, status: "closed" },
-          { name: "Spaceship Earth", wait: 0, status: "closed" }
-        ]
-      },
-      "Universal Studios Florida": {
-        hours: "8:00 AM – 8:00 PM",
-        earlyEntry: "7:00 AM",
-        parkHopper: "11:00 AM",
-        attractions: [
-          { name: "Gringotts", wait: 80, status: "open" }
-        ]
-      }
-    };
+  await Promise.all(Object.entries(PARK_IDS).map(async ([name, id]) => {
+    try {
+      const response = await fetch(`https://queue-times.com/parks/${id}/queue_times.json`);
+      const json = await response.json();
 
-    const filteredParks = {};
+      const allRides = json.lands.flatMap(land =>
+        land.rides
+          .filter(r => typeof r.wait_time === 'number' && r.is_open)
+          .map(r => ({
+            name: r.name,
+            wait: r.wait_time
+          }))
+      );
 
-    for (const [park, info] of Object.entries(parkData)) {
-      const openRides = (info.attractions || []).filter(r => r.status === 'open');
-      const [openStr, closeStr] = info.hours.split('–').map(s => s.trim());
-      const openTime = parseTimeToTodayDate(openStr);
-      const closeTime = parseTimeToTodayDate(closeStr);
+      const topRides = allRides.sort((a, b) => b.wait - a.wait).slice(0, 5);
 
-      const isOpen = now >= openTime && now < closeTime && openRides.length > 0;
-
-      filteredParks[park] = {
-        ...info,
-        status: isOpen ? "open" : "closed",
-        attractions: isOpen ? openRides : []
+      parks[name] = {
+        status: topRides.length > 0 ? "open" : "closed",
+        attractions: topRides,
+        hours: STATIC_HOURS[name] || "Hours unavailable"
       };
+    } catch (err) {
+      parks[name] = {
+        status: "error",
+        attractions: [],
+        hours: "Error fetching"
+      };
+      console.error(`Error fetching data for ${name}:`, err);
     }
+  }));
 
-    res.json({ parks: filteredParks });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Failed to load park data' });
-  }
+  res.json({ parks });
 });
 
 app.listen(PORT, () => {
