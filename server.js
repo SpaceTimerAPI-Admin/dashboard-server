@@ -61,6 +61,10 @@ app.get('/api/waits', async (req, res) => {
   res.json({ parks });
 });
 
+app.get("/", (req, res) => {
+  res.send("🟢 Theme Park Wait Times API is live.");
+});
+
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
