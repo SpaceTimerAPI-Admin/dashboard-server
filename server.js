@@ -10,7 +10,7 @@ app.use(cors());
 
 app.get('/api/waits', async (req, res) => {
   try {
-    // Fake example data structure, replace this with real Queue-Times integration
+    // Placeholder sample park data. Replace with live queue-times API if needed.
     res.json({
       parks: {
         "Magic Kingdom": {
@@ -18,7 +18,8 @@ app.get('/api/waits', async (req, res) => {
           nightShow: "Happily Ever After – 9:00 PM",
           attractions: [
             { name: "Seven Dwarfs Mine Train", wait: 75 },
-            { name: "Peter Pan's Flight", wait: 50 }
+            { name: "Peter Pan's Flight", wait: 50 },
+            { name: "Space Mountain", wait: 40 }
           ]
         },
         "Universal Studios Florida": {
@@ -26,13 +27,22 @@ app.get('/api/waits', async (req, res) => {
           nightShow: "Cinematic Celebration – 8:30 PM",
           attractions: [
             { name: "Harry Potter and the Escape from Gringotts", wait: 80 },
-            { name: "Despicable Me Minion Mayhem", wait: 40 }
+            { name: "Transformers: The Ride", wait: 55 }
+          ]
+        },
+        "EPCOT": {
+          hours: "9:00 AM – 9:00 PM",
+          nightShow: "Luminous – 9:00 PM",
+          attractions: [
+            { name: "Guardians of the Galaxy: Cosmic Rewind", wait: 90 },
+            { name: "Test Track", wait: 60 }
           ]
         }
       }
     });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch data.' });
+    console.error(error);
+    res.status(500).json({ error: 'Failed to load park data' });
   }
 });
 
