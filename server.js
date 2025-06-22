@@ -8,9 +8,21 @@ const PORT = process.env.PORT || 4000;
 
 app.use(cors());
 
+// Helper to parse time string like "9:00 AM" into Date object for today
+function parseTimeToTodayDate(timeStr) {
+  const [hourMin, ampm] = timeStr.split(' ');
+  let [hour, min] = hourMin.split(':').map(Number);
+  if (ampm === 'PM' && hour !== 12) hour += 12;
+  if (ampm === 'AM' && hour === 12) hour = 0;
+
+  const now = new Date();
+  return new Date(now.getFullYear(), now.getMonth(), now.getDate(), hour, min);
+}
+
 app.get('/api/waits', async (req, res) => {
   try {
-    // Sample simulated ride data (replace with real API calls as needed)
+    const now = new Date();
+
     const parkData = {
       "Magic Kingdom": {
         hours: "9:00 AM – 9:00 PM",
@@ -31,18 +43,27 @@ app.get('/api/waits', async (req, res) => {
       "Universal Studios Florida": {
         hours: "8:00 AM – 8:00 PM",
         nightShow: "Cinematic Celebration – 8:30 PM",
-        attractions: []
+        attractions: [
+          { name: "Gringotts", wait: 80, status: "open" }
+        ]
       }
     };
 
-    // Filter and mark parks
     const filteredParks = {};
+
     for (const [park, info] of Object.entries(parkData)) {
       const openRides = (info.attractions || []).filter(r => r.status === 'open');
+
+      const [openStr, closeStr] = info.hours.split('–').map(s => s.trim());
+      const openTime = parseTimeToTodayDate(openStr);
+      const closeTime = parseTimeToTodayDate(closeStr);
+
+      const isOpen = now >= openTime && now < closeTime && openRides.length > 0;
+
       filteredParks[park] = {
         ...info,
-        status: openRides.length > 0 ? "open" : "closed",
-        attractions: openRides
+        status: isOpen ? "open" : "closed",
+        attractions: isOpen ? openRides : []
       };
     }
 
