@@ -26,7 +26,6 @@ app.get('/api/waits', async (req, res) => {
         hours: "9:00 AM – 9:00 PM",
         earlyEntry: "8:30 AM",
         parkHopper: "2:00 PM",
-        nightShow: "Happily Ever After – 9:00 PM",
         attractions: [
           { name: "Seven Dwarfs Mine Train", wait: 65, status: "open" },
           { name: "Peter Pan's Flight", wait: 45, status: "closed" }
@@ -36,7 +35,6 @@ app.get('/api/waits', async (req, res) => {
         hours: "9:00 AM – 9:00 PM",
         earlyEntry: "8:30 AM",
         parkHopper: "2:00 PM",
-        nightShow: "Luminous – 9:00 PM",
         attractions: [
           { name: "Test Track", wait: 0, status: "closed" },
           { name: "Spaceship Earth", wait: 0, status: "closed" }
@@ -46,7 +44,6 @@ app.get('/api/waits', async (req, res) => {
         hours: "8:00 AM – 8:00 PM",
         earlyEntry: "7:00 AM",
         parkHopper: "11:00 AM",
-        nightShow: "Cinematic Celebration – 8:30 PM",
         attractions: [
           { name: "Gringotts", wait: 80, status: "open" }
         ]
