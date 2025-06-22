@@ -1,3 +1,4 @@
+
 const express = require('express');
 const cors = require('cors');
 const fetch = require('node-fetch');
@@ -19,7 +20,7 @@ app.get('/api/waits', async (req, res) => {
     const parkData = {};
 
     for (const park of parkList.parks) {
-      const parkDetailsRes = await fetch(\`https://queue-times.com/parks/\${park.id}/queue_times.json\`);
+      const parkDetailsRes = await fetch('https://queue-times.com/parks/' + park.id + '/queue_times.json');
       const parkDetails = await parkDetailsRes.json();
 
       const allRides = [];
@@ -51,5 +52,5 @@ app.get('/api/waits', async (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(\`Server is running on port \${PORT}\`);
+  console.log('Server is running on port ' + PORT);
 });
